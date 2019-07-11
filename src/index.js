@@ -19,6 +19,11 @@ const typeDefs = `
     name: String
     email: String!
   }
+  input UserInput {
+    id: ID
+    name: String
+    email: String!
+  }
   type Query {
     hello(name: String): String!
     user: User!
@@ -27,6 +32,7 @@ const typeDefs = `
   type Mutation {
     hello(name: String!): Boolean!
     createUser(name: String!, email: String!): User
+    createUsers(users: [UserInput]): [User]!
   }
 `
 
@@ -46,14 +52,28 @@ const resolvers = {
     createUser: async (_, args, ctx) => {
       const { email } = args;
       const { models: { User }} = ctx;
-      const userExists = await User.exists();
+      const userExists = await User.exists({ email });
 
       if (userExists) {
-        throw new Error('Email already exists');
+        throw new Error('The email already exists');
       }
       const userCreated = await ctx.models.User.create(args);
 
       return userCreated;
+    },
+    createUsers: async (_, args, ctx) => {
+      const { users } = args;
+      const { models: { User }} = ctx;
+      const usersEmails = users.map(({ email }) => email);
+      const userExists = await User.exists({ email: {$in: usersEmails} });
+
+      if(userExists) {
+        throw new Error(`One email already exists`);
+      }
+
+      const usersAdded = ctx.models.User.create(users);
+
+      return usersAdded;
     }
   },
   User: {
