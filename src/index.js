@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import { GraphQLServer } from 'graphql-yoga'
 import userModel from './user.model';
+import projectModel from './project.model';
 import mongoose from 'mongoose';
-// const mongoose = require('mongoose');
 
 dotenv.config();
 
@@ -11,6 +11,7 @@ const DB_PASSWORD = process.env.DB_PASSWORD;
 
 const models = {
   User: userModel,
+  Project: projectModel,
 };
 
 const typeDefs = `
@@ -24,28 +25,36 @@ const typeDefs = `
     name: String
     email: String!
   }
+  enum Team {
+    UI
+    QA
+    DESIGN
+    ADMIN
+  }
+  type Project {
+    name: String!
+    description: String
+    team: Team!
+  }
   type Query {
     hello(name: String): String!
     user: User!
     users: [User]!
+    projects: [Project!]!
   }
   type Mutation {
     hello(name: String!): Boolean!
     createUser(name: String!, email: String!): User!
     createUsers(users: [UserInput!]!): [User]!
+    createProject(name: String!, description: String, team: Team!): Project!
   }
 `
 
 const resolvers = {
   Query: {
     hello: (_, { name }) => `Hello ${name || 'World'}`,
-    user: () => {
-      return {
-        name: 'cesar',
-        email: 'mono@zemoga.com'
-      };
-    },
     users: (_, __, ctx) => ctx.models.User.find(),
+    projects: (_, __, ctx) => ctx.models.Projects.find(),
   },
   Mutation: {
     hello: (root, args) => true,
@@ -57,7 +66,7 @@ const resolvers = {
       if (userExists) {
         throw new Error('The email already exists');
       }
-      const userCreated = await ctx.models.User.create(args);
+      const userCreated = await User.create(args);
 
       return userCreated;
     },
@@ -79,9 +88,22 @@ const resolvers = {
         throw new Error(`One email already exists in the DB`);
       }
 
-      const usersAdded = ctx.models.User.create(users);
+      const usersAdded = User.create(users);
 
       return usersAdded;
+    },
+    createProject: async (_, args, ctx) => {
+      const { name } = args;
+      const { models: { Project }} = ctx;
+      const projectExists = await Project.exists({ name });
+
+      if (projectExists) {
+        throw new Error('The project already exists');
+      }
+
+      const projectCreated = await Project.create(args);
+
+      return projectCreated;
     }
   },
   User: {
