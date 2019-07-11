@@ -64,11 +64,19 @@ const resolvers = {
     createUsers: async (_, args, ctx) => {
       const { users } = args;
       const { models: { User }} = ctx;
-      const usersEmails = users.map(({ email }) => email);
+      const usersEmails = [];
+
+      users.forEach(({ email }) => {
+        if( usersEmails.includes(email) ) {
+          throw new Error(`This email ${email} is repeated`);
+        }
+        usersEmails.push(email);
+      });
+      
       const userExists = await User.exists({ email: {$in: usersEmails} });
 
       if(userExists) {
-        throw new Error(`One email already exists`);
+        throw new Error(`One email already exists in the DB`);
       }
 
       const usersAdded = ctx.models.User.create(users);
