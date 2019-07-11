@@ -31,8 +31,8 @@ const typeDefs = `
   }
   type Mutation {
     hello(name: String!): Boolean!
-    createUser(name: String!, email: String!): User
-    createUsers(users: [UserInput]): [User]!
+    createUser(name: String!, email: String!): User!
+    createUsers(users: [UserInput!]!): [User]!
   }
 `
 
