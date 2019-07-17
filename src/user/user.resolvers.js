@@ -42,8 +42,8 @@ export default {
   },
   User: {
     id: idResolver,
-    projects: ({ id }, _, ctx) => ctx.models.Project
-      .find({users: id})
-      .populate('users'),
+    projects: ({ id }, _, ctx) => {
+      return ctx.loaders.projects.load(id);
+    },
   }
 };
