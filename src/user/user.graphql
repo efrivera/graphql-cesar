@@ -2,6 +2,7 @@ type User {
   id: ID!
   name: String
   email: String!
+  projects: [Project]
 }
 input UserInput {
   id: ID

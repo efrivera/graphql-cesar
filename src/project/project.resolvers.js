@@ -8,15 +8,15 @@ export default {
   },
   Mutation: {
     createProject: async (_, args, ctx) => {
-      const { name } = args;
+      const { Project: projectImput } = args;
       const { models: { Project, User }} = ctx;
-      const projectExists = await Project.exists({ name });
+      const projectExists = await Project.exists({ name: {$regex: projectImput.name, $options: 'i'} });
 
       if (projectExists) {
         throw new Error('The project already exists');
       }
 
-      const projectCreated = await Project.create(args);
+      const projectCreated = await Project.create(projectImput);
 
       return projectCreated;
     },
@@ -37,9 +37,15 @@ export default {
         throw new Error('project with id was not found');
       }
 
-      projectToAdd.users.push();
+      projectToAdd.users.push(userId);
 
-      return projectToAdd.save();
+      await projectToAdd.save();
+
+      return ctx.models.Project
+        .findOne({
+          _id: projectId,
+        })
+        .populate('users');
     }
   },
   Project: {

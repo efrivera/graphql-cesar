@@ -2,7 +2,7 @@ import {idResolver} from '../utils';
 
 export default {
   Query: {
-    users: (_, __, ctx) => ctx.models.User.find(),
+    users: (_, __, ctx) => ctx.models.User.find({}),
   },
   Mutation: {
     createUser: async (_, args, ctx) => {
@@ -42,5 +42,8 @@ export default {
   },
   User: {
     id: idResolver,
+    projects: ({ id }, _, ctx) => ctx.models.Project
+      .find({users: id})
+      .populate('users'),
   }
 };
